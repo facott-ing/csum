@@ -1,0 +1,165 @@
+extends layout
+
+block content
+
+    DIV(id="term").terminalx
+
+
+    script().
+        $(function () {
+            var arr = new Array();
+            var sem = new Object({
+                cases: {
+                    state: null,
+                    prompt:{
+                        'update': null,
+                        'query': null
+                    },
+                    errmsg:'Error!! Test case invalid',
+                    sucmsg:'Test cases = ',
+                    value:0
+
+                },
+                matrix:{
+                    state: null,
+                    errmsg:'Error!! define matrix invalid',
+                    sucmsg:'Matrix define',
+                    value:0,
+                    mtx:null
+                },
+                operations:{
+                    state:null,
+                    errmsg:'Error!! Number Operations invalid',
+                    sucmsg:'Number Operations define',
+                    value:0
+
+                }
+            });
+            $('#term').terminal(function (cmd, term) {
+                //term.echo('hola mundo') -> envia el mensaje de retorno de una operacion
+                //alert(cmd) -> me retorna lo que escribi
+                var t = parseInt(cmd)
+                if(isNaN(cmd)){
+                    var a = cmd.split(' ');
+                    if(!isNaN(a[0]) && !isNaN(a[1])){
+                        if(a[0]>=1 && a[0]<=100 && a[1]>=1 && a[1]<=1000){
+                            if(sem.cases.state != null){
+                                sem.operations.value = parseInt(a[1]);
+                                sem.operations.state = 1;
+                                sem.matrix.value = parseInt(a[0]);
+                                sem.matrix.state = 1;
+                                var mtx = createMatrix(sem.matrix.value);
+                                sem.matrix.mtx = mtx;
+                                term.echo('Matrix Create');
+                                for(var i = 0 in mtx){
+                                    term.echo(mtx[i].ref + ' -> W = '+mtx[i].w);
+                                }
+
+                            }else{term.echo('Warning!! first need to declare Test cases')}
+                        }else{term.echo('Invalid ranges')}
+
+                    }else{
+                        if(isNaN(a[0]) && isNaN(a[1]) && a[0] != 'UPDATE' || isNaN(a[0]) && isNaN(a[1]) && a[0] != 'QUERY'){
+                            term.echo(sem.matrix.errmsg)
+                        }
+
+                        if(a[0] === 'UPDATE' || a[0] === 'QUERY'){
+                            if(sem.operations.value < 1){
+                                term.echo('-------- + --------- Finished number of operations -------- + ---------');
+                            }else{
+                                sem.operations.value --;
+                                switch (a[0]){
+                                    case 'UPDATE':
+                                        if(!a[1]){
+                                            term.echo('Invalid Update or Query Declaration');
+                                        }else{
+                                            var position = a[1];
+                                            var valuen= a[2];
+
+                                            if(isNaN(position) || !valuen){
+                                                term.echo('Invalid Update Declaration')
+                                            }else{
+                                                position = (position.substring(0,1)) - 1;
+                                                sem.matrix.mtx[position].w = valuen;
+                                                term.echo('Update position '+sem.matrix.mtx[position].ref+' -> '+sem.matrix.mtx[position].w);
+                                            }
+                                        }
+
+                                        break;
+
+                                    case 'QUERY':
+                                        if(!a[1]){
+                                            term.echo('Invalid Update or Query Declaration');
+                                        }else{
+                                            var position = a[1];
+                                            var valuen= a[2];
+
+                                            if(isNaN(position) || isNaN(valuen)){
+                                                term.echo('Invalid Query Declaration')
+                                            }else{
+                                                var from = (position.substring(0,1));
+                                                var to = (valuen.substring(0,1));
+                                                if(from > to){
+                                                    term.echo('Invalid Query Declaration. Bad ranges.');
+                                                }else{
+                                                    from = from - 1;
+                                                    to = to - 1;
+                                                    var sum = 0;
+                                                    for(var u = 0; u <= to; u++){
+
+                                                        sum = sum + parseInt(sem.matrix.mtx[u].w);
+                                                    }
+                                                    term.echo('Cube Summation -> '+sum);
+                                                }
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
+
+                        }
+
+
+                    }
+                }else{
+                    if(t >= 1 && t <= 50){
+                        sem.cases.state = 1;
+                        sem.cases.value = t;
+                        term.echo(sem.cases.sucmsg + sem.cases.value)
+                    }else{term.echo(sem.cases.errmsg)}
+                }
+                if (cmd === 'CLEAR') {
+                    location.reload()
+                }
+            }, {
+                prompt: 'Terminal: csum >',
+                greetings: 'Cube Summation ..::.. by Fabian Cote G.\n' +
+                '-------------+---------+------------------+----------- \n' +
+                'Opciones: \n' +
+                'Type the number of test-cases "T", Note: type the number 2' +
+                '\n' +
+                '-------------+---------+------------------+----------- \n',
+                keypress: function (e, term) {
+
+                    term.insert(String.fromCharCode(e.which).toUpperCase());
+                    return false;
+                }
+            });
+        });
+
+        function createMatrix(value){
+            var matrix = new Array();
+            for(var i = 1; i<= value; i++){
+                var mx = new Object({
+                    ref:'('+i+', '+i+', '+i+')',
+                    x:i,
+                    y:i,
+                    z:i,
+                    w:0
+                });
+                matrix.push(mx)
+            }
+            return(matrix)
+        }
+
+
